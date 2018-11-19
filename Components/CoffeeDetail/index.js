@@ -1,6 +1,6 @@
 import React, { Component } from "react";
 import { connect } from "react-redux";
-
+import * as actionCreators from "../../store/actions/coffeeActions";
 // NativeBase Components
 import {
   Thumbnail,
@@ -37,7 +37,7 @@ class CoffeeDetail extends Component {
         onPress={() => navigation.navigate("CoffeeCart")}
       >
         <Text>
-          {"3 "}
+          {navigation.getParam("cartNum")}
           <Icon
             type="FontAwesome"
             name="coffee"
@@ -53,13 +53,19 @@ class CoffeeDetail extends Component {
       drink: value
     });
   }
-
+  componentDidMount() {
+    this.props.navigation.setParams({ cartNum: this.props.list.length });
+  }
   changeOption(value) {
     this.setState({
       option: value
     });
   }
-
+  componentDidUpdate() {
+    if (this.props.navigation.getParam("cartNum") !== this.props.list.length) {
+      this.props.navigation.setParams({ cartNum: this.props.list.length });
+    }
+  }
   render() {
     const coffeeshop = this.props.navigation.getParam("shop", {});
     return (
@@ -105,7 +111,16 @@ class CoffeeDetail extends Component {
               </Picker>
             </Body>
           </ListItem>
-          <Button full danger>
+          <Button
+            full
+            danger
+            onPress={() => {
+              this.props.addItem(this.state.drink, this.state.option);
+              this.props.navigation.setParams({
+                cartNum: this.props.list.length
+              });
+            }}
+          >
             <Text>Add</Text>
           </Button>
         </List>
@@ -115,10 +130,15 @@ class CoffeeDetail extends Component {
 }
 
 const mapStateToProps = state => ({
-  cart: state.cart
+  cart: state.cart,
+  list: state.cart.list
+});
+const mapDispatchToProps = dispatch => ({
+  addItem: (coffee, size) =>
+    dispatch(actionCreators.addItemToCart(coffee, size))
 });
 
 export default connect(
   mapStateToProps,
-  {}
+  mapDispatchToProps
 )(CoffeeDetail);
